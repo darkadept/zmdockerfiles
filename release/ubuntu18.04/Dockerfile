@@ -6,7 +6,7 @@ RUN apt update \
     && apt upgrade --assume-yes
 
 # Install pre-reqs
-RUN apt install --assume-yes --no-install-recommends gnupg
+RUN apt install --assume-yes --no-install-recommends gnupg cron nano
 
 # Configure Zoneminder PPA
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ABE4C7F993453843F0AEB8154D0BF748776FFB04 \
@@ -26,5 +26,10 @@ EXPOSE 80
 
 # Configure entrypoint
 COPY utils/entrypoint.sh /usr/local/bin/
+COPY utils/zmu_killer.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/zmu_killer.sh
+
+RUN crontab -l | { cat; echo "0 */3 * * * /usr/local/bin/zmu_killer.sh"; } | crontab -
+
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
